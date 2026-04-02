@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
@@ -15,7 +15,7 @@ export async function PUT(
   const { category, taskName, progressTime, status, notes } = body;
 
   try {
-    const task = await prisma.task.update({
+    const task = await getPrisma().task.update({
       where: { id: taskId },
       data: {
         ...(category !== undefined && { category }),
@@ -43,7 +43,7 @@ export async function DELETE(
   }
 
   try {
-    await prisma.task.delete({ where: { id: taskId } });
+    await getPrisma().task.delete({ where: { id: taskId } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/tasks/[id] error:", error);

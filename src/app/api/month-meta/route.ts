@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const meta = await prisma.monthMeta.findUnique({ where: { month } });
+    const meta = await getPrisma().monthMeta.findUnique({ where: { month } });
     return NextResponse.json({ totalShifts: meta?.totalShifts ?? "" });
   } catch (error) {
     console.error("GET /api/month-meta error:", error);
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Missing month" }, { status: 400 });
     }
 
-    const meta = await prisma.monthMeta.upsert({
+    const meta = await getPrisma().monthMeta.upsert({
       where: { month },
       update: { totalShifts: totalShifts ?? "" },
       create: { month, totalShifts: totalShifts ?? "" },

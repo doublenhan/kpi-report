@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const month = searchParams.get("month");
 
   try {
-    const tasks = await prisma.task.findMany({
+    const tasks = await getPrisma().task.findMany({
       where: month ? { month } : undefined,
       orderBy: { id: "asc" },
     });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const task = await prisma.task.create({
+    const task = await getPrisma().task.create({
       data: {
         month,
         category,
