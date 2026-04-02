@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id           Int      @id @default(autoincrement())
+  month        String   // "2026-03", "2026-04", etc.
+  category     String   // "THÊU", "HOÀN THIỆN", "NGOÀI GIỜ"
+  taskName     String
+  progressTime String
+  status       String   // "Chưa Hoàn Thành", "Hoàn Thành"
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model MonthMeta {
+  id          Int    @id @default(autoincrement())
+  month       String @unique // "2026-03", "2026-04", etc.
+  totalShifts String @default("")
+}
