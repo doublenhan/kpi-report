@@ -43,6 +43,7 @@ export default function Home() {
   const [selectedMonthNum, setSelectedMonthNum] = useState(now.getMonth() + 1);
   const selectedMonth = `${selectedYear}-${String(selectedMonthNum).padStart(2, "0")}`;
   const [totalShifts, setTotalShifts] = useState("");
+  const [fullName, setFullName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -62,10 +63,12 @@ export default function Home() {
       const meta = await metaRes.json();
       setTasks(Array.isArray(data) ? sortTasksByCategory(data) : []);
       setTotalShifts(meta.totalShifts ?? "");
+      setFullName(meta.fullName ?? "");
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
       setTasks([]);
       setTotalShifts("");
+      setFullName("");
     } finally {
       setLoading(false);
     }
@@ -90,6 +93,19 @@ export default function Home() {
       });
     } catch (error) {
       console.error("Failed to save total shifts:", error);
+    }
+  };
+
+  const handleFullNameChange = async (value: string) => {
+    setFullName(value);
+    try {
+      await fetch("/api/month-meta", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: selectedMonth, fullName: value }),
+      });
+    } catch (error) {
+      console.error("Failed to save full name:", error);
     }
   };
 
@@ -133,7 +149,7 @@ export default function Home() {
   };
 
   const handleExportImage = async () => {
-    const element = document.getElementById("kpi-report-table");
+    const element = document.getElementById("kpi-report-export");
     if (!element) return;
 
     try {
@@ -234,6 +250,16 @@ export default function Home() {
                     className="w-full sm:w-32 px-2.5 py-1.5 sm:py-2 rounded-lg border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition placeholder:text-gray-300"
                   />
                 </div>
+                <div>
+                  <label className="block text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Họ và Tên</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => handleFullNameChange(e.target.value)}
+                    placeholder="Nhập họ tên..."
+                    className="w-full sm:w-44 px-2.5 py-1.5 sm:py-2 rounded-lg border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition placeholder:text-gray-300"
+                  />
+                </div>
               </div>
             </div>
 
@@ -263,21 +289,48 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Table */}
-        {loading ? (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
-            <div className="animate-spin w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-400 text-sm">Đang tải...</p>
-          </div>
-        ) : (
-          <TaskTable
-            tasks={tasks}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            hideActions={exporting}
-            exporting={exporting}
-          />
-        )}
+        {/* Export wrapper - contains header + table for image export */}
+        <div id="kpi-report-export" style={exporting ? { minWidth: '800px', width: 'max-content', backgroundColor: '#ffffff', padding: '24px 32px' } : undefined}>
+          {/* Export Header - only visible during export */}
+          {exporting && (
+            <div className="mb-6" style={{ fontFamily: 'sans-serif' }}>
+              <h1 className="text-center text-xl font-bold text-gray-900 uppercase tracking-wide mb-4">
+                BÁO CÁO KPI NHÂN VIÊN THỦ CÔNG THEO THÁNG
+              </h1>
+              <div className="flex flex-col gap-1.5 text-sm text-gray-700 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[110px]">Tháng/Năm:</span>
+                  <span className="font-medium">{MONTH_NAMES[selectedMonthNum - 1]} {selectedYear}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[110px]">Họ và Tên:</span>
+                  <span className="font-medium">{fullName || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[110px]">Tổng số ca:</span>
+                  <span className="font-medium">{totalShifts || "—"}</span>
+                </div>
+              </div>
+              <hr className="border-gray-300" />
+            </div>
+          )}
+
+          {/* Table */}
+          {loading ? (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+              <div className="animate-spin w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p className="text-gray-400 text-sm">Đang tải...</p>
+            </div>
+          ) : (
+            <TaskTable
+              tasks={tasks}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              hideActions={exporting}
+              exporting={exporting}
+            />
+          )}
+        </div>
 
         <TaskDialog
           open={dialogOpen}

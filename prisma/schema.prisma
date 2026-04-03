@@ -27,4 +27,5 @@ model MonthMeta {
   id          Int    @id @default(autoincrement())
   month       String @unique // "2026-03", "2026-04", etc.
   totalShifts String @default("")
+  fullName    String @default("")
 }
